@@ -1,0 +1,74 @@
+---
+services:
+  redis-master:
+    image: bitnami/redis:7.2
+    hostname: redis-master
+    networks:
+      - redis_net
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_REPLICATION_MODE=master
+    deploy:
+      replicas: 1
+
+  redis-slave:
+    image: bitnami/redis:7.2
+    hostname: redis-slave
+    networks:
+      - redis_net
+    depends_on:
+      - redis-master
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_REPLICATION_MODE=slave
+      - REDIS_MASTER_HOST=redis-master
+    deploy:
+      replicas: 1
+
+  redis-sentinel:
+    image: bitnami/redis-sentinel:7.2
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_SENTINEL_DOWN_AFTER_MILLISECONDS=3000
+      - REDIS_MASTER_HOST=redis-master
+    deploy:
+      mode: global
+    depends_on:
+      - redis-master
+    networks:
+      - redis_net
+  proxy:
+    image: haproxy:lts
+    hostname: redis
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - redis_net
+      - app_net
+    depends_on:
+      - redis-sentinel
+    deploy:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=app_net"
+      - "traefik.http.routers.haproxy.entrypoints=http"
+      - "traefik.http.routers.haproxy.rule=Host(`haproxy.web.echoamir.ir`)"
+      - "traefik.http.routers.haproxy.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.routers.haproxy-secure.entrypoints=https"
+      - "traefik.http.routers.haproxy-secure.rule=Host(`haproxy.web.echoamir.ir`)"
+      - "traefik.http.routers.haproxy-secure.tls=true"
+      - "traefik.http.routers.haproxy-secure.tls.certresolver=mycert"
+      - "traefik.http.routers.haproxy-secure.service=haproxy"
+      - "traefik.http.services.haproxy.loadbalancer.server.port=9000"
+
+networks:
+  redis_net:
+    name: redis_net
+    driver: overlay
+    external: false
+    attachable: true
+  app_net:
+    external: true
+    driver: overlay
+    attachable: true
