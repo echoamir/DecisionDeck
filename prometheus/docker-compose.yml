@@ -1,0 +1,62 @@
+---
+services:
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - "./prometheus.yml:/etc/prometheus/prometheus.yml"
+    networks:
+      - app_net
+    labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=app_net"
+        - "traefik.http.routers.prometheus.entrypoints=http"
+        - "traefik.http.routers.prometheus.rule=Host(`prometheus.web.echoamir.ir`)"
+        - "traefik.http.routers.prometheus.middlewares=https-redirect"
+        - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.prometheus-secure.entrypoints=https"
+        - "traefik.http.routers.prometheus-secure.rule=Host(`prometheus.web.echoamir.ir`)"
+        - "traefik.http.routers.prometheus-secure.tls=true"
+        - "traefik.http.routers.prometheus-secure.tls.certresolver=mycert"
+        - "traefik.http.routers.prometheus-secure.service=prometheus"
+        - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
+
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      # - ./grafana:/etc/grafana/provisioning/datasources
+      - ./datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
+    networks:
+      - app_net
+    labels:
+        - "traefik.enable=true"
+        - "traefik.docker.network=app_net"
+        - "traefik.http.routers.grafana.entrypoints=http"
+        - "traefik.http.routers.grafana.rule=Host(`grafana.web.echoamir.ir`)"
+        - "traefik.http.routers.grafana.middlewares=https-redirect"
+        - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+        - "traefik.http.routers.grafana-secure.entrypoints=https"
+        - "traefik.http.routers.grafana-secure.rule=Host(`grafana.web.echoamir.ir`)"
+        - "traefik.http.routers.grafana-secure.tls=true"
+        - "traefik.http.routers.grafana-secure.tls.certresolver=mycert"
+        - "traefik.http.routers.grafana-secure.service=grafana"
+        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node-exporter
+    restart: unless-stopped
+    networks:
+      - app_net
+
+
+
+networks:
+  app_net:
+    external: true
