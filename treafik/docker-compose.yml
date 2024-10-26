@@ -1,0 +1,43 @@
+---
+services:
+  traefik:
+    image: traefik:v2.10.4
+    restart: always
+    container_name: traefik
+    command:
+      - --log.level=ERROR
+      - --log.filepath=/log-file.log
+      - --log.format=json
+      - --api=true
+      - --api.insecure=true
+      - --ping=true
+      - --accesslog=true
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=web_app
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      - --metrics.prometheus=true
+      - --entryPoints.metrics.address=:8082
+      - --metrics.prometheus.entryPoint=metrics
+      - --certificatesresolvers.mycert.acme.email=cert@example.ir
+      - --certificatesresolvers.mycert.acme.storage=/acme/acme.json
+      - --certificatesresolvers.mycert.acme.tlschallenge=true
+    ports:
+      - 80:80
+      - 443:443
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik-acme:/acme
+    networks:
+      - app_net
+networks:
+  app_net:
+    name: app_net
+    external: false
+    driver: overlay
+    attachable: true
+volumes:
+  traefik-acme:
+    name: traefik-acme
