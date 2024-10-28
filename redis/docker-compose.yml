@@ -22,6 +22,11 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
       - REDIS_REPLICATION_MODE=slave
       - REDIS_MASTER_HOST=redis-master
+      - REDIS_SENTINEL_RESOLVE_HOSTNAMES=yes
+      - REDIS_SENTINEL_QUORUM=1
+      - REDIS_SENTINEL_FAILOVER_TIMEOUT=3000
+      - REDIS_SENTINEL_ANNOUNCE_HOSTNAMES=yes
+
     deploy:
       replicas: 1
 

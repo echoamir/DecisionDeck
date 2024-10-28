@@ -17,8 +17,8 @@ app.logger.handlers.extend(gunicorn_error_logger.handlers)
 app.logger.setLevel(logging.INFO)
 
 def get_redis():
-    if not hasattr(g, 'redis-master'):
-        g.redis = Redis(host="redis-master", db=0, socket_timeout=5)
+    if not hasattr(g, 'proxy'):
+        g.redis = Redis(host="proxy", db=0, socket_timeout=5)
     return g.redis
 
 @app.route("/", methods=['POST','GET'])
