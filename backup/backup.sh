@@ -10,9 +10,8 @@ CONTAINER_NAME="postgres_container_name"
 
 mkdir -p $BACKUP_DIR
 
-docker exec -t $CONTAINER_NAME pg_dump -U postgres database_name > $BACKUP_FILE
+docker exec -t $CONTAINER_NAME pg_dumpall -U postgres vote > $BACKUP_FILE
 
 scp $BACKUP_FILE $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR
 
-find $BACKUP_DIR -type f -mtime +7 -name "*.sql" -exec rm {} \;
 
