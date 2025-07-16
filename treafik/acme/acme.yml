@@ -10,5 +10,5 @@ certificatesResolvers:
     acme:
       email: kolahiamir1@gmail.com
       storage: acme.json
-        tlsChallenge: {}
+      tlsChallenge: {}
 
